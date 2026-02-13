@@ -154,6 +154,14 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Force scroll to top on refresh
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
