@@ -97,7 +97,7 @@ function MorphingText() {
   const word = ROTATE_WORDS[index];
 
   return (
-    <span className="relative inline-block min-w-[200px] overflow-hidden text-left align-bottom sm:min-w-[250px] md:min-w-[320px]">
+    <span className="relative inline-block min-w-[200px] overflow-hidden align-bottom sm:min-w-[250px] md:min-w-[320px]">
       <AnimatePresence mode="wait">
         <motion.span
           key={word}
@@ -193,7 +193,7 @@ export default function LandingPage() {
   return (
     <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-background">
       {/* Background layers */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       <AnimatedOrbs />
       <FloatingParticles />
 
@@ -260,7 +260,7 @@ export default function LandingPage() {
           {/* Headline */}
           <motion.h1
             variants={fadeUp}
-            className="text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+            className="mx-auto text-center text-4xl font-extrabold leading-[1.08] tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
           >
             <span className="whitespace-nowrap">You agreed to 2 rounds.</span>
             <br />
