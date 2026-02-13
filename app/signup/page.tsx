@@ -13,8 +13,8 @@ export default function SignupPage() {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
                 router.replace("/dashboard");
             } else {
                 setChecking(false);

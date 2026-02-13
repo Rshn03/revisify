@@ -13,8 +13,12 @@ export default function LoginPage() {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
+        supabase.auth.getUser().then(async ({ data: { user } }) => {
+            if (user) {
+                // Ensure public.users row exists (covers auto-session from signup)
+                await supabase
+                    .from("users")
+                    .upsert({ id: user.id, email: user.email });
                 router.replace("/dashboard");
             } else {
                 setChecking(false);
@@ -37,14 +41,16 @@ export default function LoginPage() {
 
         try {
             // 1. Authenticate user
-            const { data, error: signInError } =
+            const { error: signInError } =
                 await supabase.auth.signInWithPassword({ email, password });
 
             if (signInError) throw signInError;
 
-            const user = data.user;
+            // 2. Verify user with server
+            const { data: { user }, error: userError } =
+                await supabase.auth.getUser();
 
-            if (!user) {
+            if (userError || !user) {
                 throw new Error("Login succeeded but no user was returned.");
             }
 
