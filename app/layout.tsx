@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
+        <Navbar />
         {children}
       </body>
     </html>

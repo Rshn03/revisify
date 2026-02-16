@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -28,8 +32,9 @@ export default function LoginPage() {
 
     if (checking) {
         return (
-            <main className="flex min-h-screen items-center justify-center bg-gray-950">
-                <p className="text-sm text-gray-400">Loading…</p>
+            <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
+                <AnimatedBackground />
+                <p className="text-sm text-muted-foreground animate-pulse">Loading…</p>
             </main>
         );
     }
@@ -76,73 +81,82 @@ export default function LoginPage() {
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-            <div className="w-full max-w-sm space-y-6 rounded-2xl bg-gray-900 p-8 shadow-lg shadow-black/30 border border-gray-800">
-                <h1 className="text-center text-2xl font-bold tracking-tight text-white">
-                    Welcome back
-                </h1>
+        <main className="flex min-h-screen items-center justify-center px-4 relative overflow-hidden">
+            <AnimatedBackground />
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="mb-1 block text-sm font-medium text-gray-300"
+            <div className="w-full max-w-sm space-y-8 relative z-10">
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                        Welcome back
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Enter your credentials to access your account
+                    </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/40 p-8 backdrop-blur-md shadow-2xl">
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="email"
+                                className="text-sm font-medium text-foreground"
+                            >
+                                Email
+                            </label>
+                            <Input
+                                id="email"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="you@example.com"
+                                className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus-visible:ring-amber-500"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="password"
+                                className="text-sm font-medium text-foreground"
+                            >
+                                Password
+                            </label>
+                            <Input
+                                id="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                className="bg-white/5 border-white/10 text-foreground placeholder:text-muted-foreground focus-visible:ring-amber-500"
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
+                                {error}
+                            </div>
+                        )}
+
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 hover:from-amber-600 hover:to-orange-600 transition-all font-semibold"
                         >
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
-                            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
-                    </div>
+                            {loading ? "Logging in…" : "Log in"}
+                        </Button>
+                    </form>
 
-                    <div>
-                        <label
-                            htmlFor="password"
-                            className="mb-1 block text-sm font-medium text-gray-300"
+                    <div className="mt-6 text-center text-sm">
+                        <span className="text-muted-foreground">Don&apos;t have an account? </span>
+                        <Link
+                            href="/signup"
+                            className="font-medium text-amber-500 hover:text-amber-400 transition-colors"
                         >
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
+                            Sign up
+                        </Link>
                     </div>
-
-                    {error && (
-                        <p className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400">
-                            {error}
-                        </p>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {loading ? "Logging in…" : "Log in"}
-                    </button>
-                </form>
-
-                <p className="text-center text-sm text-gray-400">
-                    Don&apos;t have an account?{" "}
-                    <a
-                        href="/signup"
-                        className="font-medium text-indigo-400 hover:text-indigo-300"
-                    >
-                        Sign up
-                    </a>
-                </p>
+                </div>
             </div>
         </main>
     );
