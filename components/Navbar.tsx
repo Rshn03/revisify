@@ -5,36 +5,83 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+import { useRouter, usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { LogOut } from "lucide-react";
+
 export default function Navbar() {
+    const router = useRouter();
+    const pathname = usePathname();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+
+        // Check auth state
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        checkUser();
+
+        // Listen for auth changes
+        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            authListener.subscription.unsubscribe();
+        };
     }, []);
 
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    const handleLogoClick = () => {
+        if (user) {
+            window.location.href = "/dashboard";
+        } else {
+            window.location.href = "/home";
+        }
+    };
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push("/home");
+        setIsMobileMenuOpen(false);
     };
 
     const scrollToSection = (id: string) => {
         setIsMobileMenuOpen(false);
-        const element = document.getElementById(id);
-        if (element) {
-            const offset = 80; // height of navbar + buffer
-            const elementRect = element.getBoundingClientRect();
-            const absoluteElementTop = elementRect.top + window.pageYOffset;
-            const offsetPosition = absoluteElementTop - offset;
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: "smooth",
-            });
+        // Debug: Log what we are trying to find
+        console.log(`Trying to scroll to: ${id}, current path: ${pathname}`);
+
+        if (pathname !== "/home" && pathname !== "/") {
+            router.push(`/home#${id}`);
+            return;
         }
+
+        // Add a small delay for mobile menu close animation
+        setTimeout(() => {
+            const element = document.getElementById(id);
+            if (element) {
+                const offset = 80;
+                const elementRect = element.getBoundingClientRect();
+                const absoluteElementTop = elementRect.top + window.scrollY;
+                const offsetPosition = absoluteElementTop - offset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth",
+                });
+            } else {
+                console.warn(`Element with id ${id} not found.`);
+            }
+        }, 100);
     };
 
     return (
@@ -50,7 +97,7 @@ export default function Navbar() {
             <div className="mx-auto flex h-16 w-full items-center justify-between px-6">
                 {/* Logo */}
                 <div
-                    onClick={scrollToTop}
+                    onClick={handleLogoClick}
                     className="cursor-pointer text-lg font-bold tracking-tight text-foreground transition-opacity hover:opacity-80"
                 >
                     Revisify
@@ -58,26 +105,42 @@ export default function Navbar() {
 
                 {/* Desktop Menu */}
                 <div className="hidden items-center gap-8 md:flex">
-                    <button
-                        onClick={() => scrollToSection("how-it-works")}
-                        className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        How it works
-                    </button>
-                    <button
-                        onClick={() => scrollToSection("pricing")}
-                        className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                        Pricing
-                    </button>
-                    <Link href="/">
+                    {!user && (
+                        <>
+                            <button
+                                onClick={() => scrollToSection("how-it-works")}
+                                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                How it works
+                            </button>
+                            <button
+                                onClick={() => scrollToSection("pricing")}
+                                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                Pricing
+                            </button>
+                        </>
+                    )}
+
+                    {user ? (
                         <Button
-                            size="sm"
-                            className="h-9 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-xl hover:shadow-amber-500/30"
+                            onClick={handleLogout}
+                            variant="outline"
+                            className="border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground hover:border-white/20 transition-all group"
                         >
-                            Start free
+                            <LogOut className="mr-2 h-4 w-4 group-hover:text-red-400 transition-colors" />
+                            Log out
                         </Button>
-                    </Link>
+                    ) : (
+                        <Link href="/signup">
+                            <Button
+                                size="sm"
+                                className="h-9 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-xl hover:shadow-amber-500/30"
+                            >
+                                Start free
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -120,24 +183,40 @@ export default function Navbar() {
                         className="overflow-hidden border-b border-foreground/5 bg-background/95 backdrop-blur-xl md:hidden"
                     >
                         <div className="flex flex-col space-y-4 px-6 py-6">
-                            <button
-                                onClick={() => scrollToSection("how-it-works")}
-                                className="text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                How it works
-                            </button>
-                            <button
-                                onClick={() => scrollToSection("pricing")}
-                                className="text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                            >
-                                Pricing
-                            </button>
+                            {!user && (
+                                <>
+                                    <button
+                                        onClick={() => scrollToSection("how-it-works")}
+                                        className="text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        How it works
+                                    </button>
+                                    <button
+                                        onClick={() => scrollToSection("pricing")}
+                                        className="text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        Pricing
+                                    </button>
+                                </>
+                            )}
+
                             <div className="pt-2">
-                                <Link href="/" className="w-full">
-                                    <Button className="w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30">
-                                        Start free
+                                {user ? (
+                                    <Button
+                                        onClick={handleLogout}
+                                        className="w-full justify-start text-muted-foreground hover:text-foreground border border-white/5 bg-white/5 hover:bg-white/10"
+                                        variant="ghost"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4 text-red-400" />
+                                        Log out
                                     </Button>
-                                </Link>
+                                ) : (
+                                    <Link href="/signup" className="w-full">
+                                        <Button className="w-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30">
+                                            Start free
+                                        </Button>
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </motion.div>

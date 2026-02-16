@@ -126,7 +126,7 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center overflow-hidden bg-background">
+    <main className="relative flex min-h-screen flex-col items-center overflow-hidden">
       <AnimatedBackground />
 
       {/* ── Navigation Removed (using global Navbar) ── */}

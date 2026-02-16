@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 /* ─── Shared Animations ───────────────────────────────────────────────────── */
@@ -100,12 +101,14 @@ export default function LaunchPage() {
                         </motion.p>
 
                         <motion.div variants={fadeUp} className="flex flex-col items-center gap-4">
-                            <Button
-                                size="lg"
-                                className="h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-8 text-base font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-xl hover:shadow-amber-500/30"
-                            >
-                                Start free (1 project)
-                            </Button>
+                            <Link href="/signup">
+                                <Button
+                                    size="lg"
+                                    className="h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-8 text-base font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:shadow-xl hover:shadow-amber-500/30"
+                                >
+                                    Start free (1 project)
+                                </Button>
+                            </Link>
                             <p className="text-xs text-muted-foreground">
                                 No credit card • No awkward conversations
                             </p>
@@ -297,12 +300,14 @@ export default function LaunchPage() {
                                     <CheckIcon /> Basic Tracking
                                 </li>
                             </ul>
-                            <Button
-                                variant="outline"
-                                className="w-full border-white/10 hover:bg-white/5"
-                            >
-                                Start Free
-                            </Button>
+                            <Link href="/signup" className="w-full">
+                                <Button
+                                    variant="outline"
+                                    className="w-full border-white/10 hover:bg-white/5"
+                                >
+                                    Start Free
+                                </Button>
+                            </Link>
                         </div>
 
                         {/* Pro */}
@@ -324,9 +329,11 @@ export default function LaunchPage() {
                                     <CheckIcon /> Scope + Revision Tracking
                                 </li>
                             </ul>
-                            <Button className="w-full bg-amber-500 text-white hover:bg-amber-600">
-                                Get Pro
-                            </Button>
+                            <Link href="/signup" className="w-full">
+                                <Button className="w-full bg-amber-500 text-white hover:bg-amber-600">
+                                    Get Pro
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                     <p className="mt-6 text-sm text-muted-foreground">
@@ -340,12 +347,14 @@ export default function LaunchPage() {
                         Protect your next project.
                     </h2>
                     <div className="flex flex-col items-center gap-4">
-                        <Button
-                            size="lg"
-                            className="h-14 rounded-full bg-foreground px-10 text-lg font-semibold text-background transition-transform hover:scale-105"
-                        >
-                            Start free
-                        </Button>
+                        <Link href="/signup">
+                            <Button
+                                size="lg"
+                                className="h-14 rounded-full bg-foreground px-10 text-lg font-semibold text-background transition-transform hover:scale-105"
+                            >
+                                Start free
+                            </Button>
+                        </Link>
                         <p className="text-sm text-muted-foreground">
                             No credit card required.
                         </p>
