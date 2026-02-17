@@ -36,12 +36,26 @@ export default function NewProjectPage() {
                 return;
             }
 
+            // Ensure user row exists (needed for FK on projects/payments)
+            await supabase
+                .from("users")
+                .upsert({ id: user.id, email: user.email });
+
+            // Check pro status
+            const { data: payments } = await supabase
+                .from("payments")
+                .select("is_active")
+                .eq("user_id", user.id)
+                .eq("is_active", true);
+
+            const isPro = payments && payments.length > 0;
+
             // Check free-tier project limit
             const { data, error } = await supabase
                 .from("projects")
                 .select("id");
 
-            if (!error && data && data.length >= FREE_PROJECT_LIMIT) {
+            if (!isPro && !error && data && data.length >= FREE_PROJECT_LIMIT) {
                 setLimitReached(true);
             }
 
@@ -66,17 +80,7 @@ export default function NewProjectPage() {
                 return;
             }
 
-            // Re-check limit before inserting (guard against race conditions)
-            const { data: existing } = await supabase
-                .from("projects")
-                .select("id");
-
-            if (existing && existing.length >= FREE_PROJECT_LIMIT) {
-                setLimitReached(true);
-                return;
-            }
-
-            // Ensure user row exists (mirrors login upsert)
+            // Ensure user row exists first (FK dependency)
             const { error: upsertError } = await supabase
                 .from("users")
                 .upsert({
@@ -85,6 +89,26 @@ export default function NewProjectPage() {
                 });
 
             if (upsertError) throw upsertError;
+
+            // Re-check pro status & limit before inserting
+            const { data: payments } = await supabase
+                .from("payments")
+                .select("is_active")
+                .eq("user_id", user.id)
+                .eq("is_active", true);
+
+            const isPro = payments && payments.length > 0;
+
+            if (!isPro) {
+                const { data: existing } = await supabase
+                    .from("projects")
+                    .select("id");
+
+                if (existing && existing.length >= FREE_PROJECT_LIMIT) {
+                    setLimitReached(true);
+                    return;
+                }
+            }
 
             const { data, error: insertError } = await supabase
                 .from("projects")
@@ -158,10 +182,10 @@ export default function NewProjectPage() {
                     </div>
 
                     <Button
-                        disabled
-                        className="w-full cursor-not-allowed bg-white/5 text-muted-foreground border border-white/5 hover:bg-white/5"
+                        onClick={() => router.push("/upgrade")}
+                        className="w-full bg-amber-500 text-white hover:bg-amber-600"
                     >
-                        Coming soon
+                        Upgrade to Pro
                     </Button>
 
                     <Button

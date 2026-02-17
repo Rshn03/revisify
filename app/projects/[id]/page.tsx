@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Lock, History, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Lock, History, AlertCircle, CheckCircle2, Share2, Copy, Check, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Project {
@@ -16,6 +16,7 @@ interface Project {
     scope: string;
     revision_limit: number;
     created_at: string;
+    share_token?: string; // Add share_token to interface
 }
 
 interface Revision {
@@ -36,6 +37,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     const [revisionNote, setRevisionNote] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Share Modal state
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [shareUrl, setShareUrl] = useState("");
+    const [copySuccess, setCopySuccess] = useState(false);
+    const [regenerating, setRegenerating] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -129,6 +136,64 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         }
     }
 
+    async function handleShare() {
+        if (!project) return;
+        setCopySuccess(false);
+
+        let token = project.share_token;
+
+        if (!token) {
+            // Generate new token if not exists
+            token = crypto.randomUUID();
+            const { error: updateError } = await supabase
+                .from("projects")
+                .update({ share_token: token })
+                .eq("id", project.id);
+
+            if (updateError) {
+                console.error("Failed to generate share token:", updateError);
+                return; // Optionally show error state
+            }
+
+            // Update local state
+            setProject({ ...project, share_token: token });
+        }
+
+        // Construct URL
+        const url = `${window.location.origin}/share/${token}`;
+        setShareUrl(url);
+        setIsShareModalOpen(true);
+    }
+
+    async function handleRegenerateLink() {
+        if (!project) return;
+        setRegenerating(true);
+
+        const newToken = crypto.randomUUID();
+        const { error: updateError } = await supabase
+            .from("projects")
+            .update({ share_token: newToken })
+            .eq("id", project.id);
+
+        if (updateError) {
+            console.error("Failed to regenerate token:", updateError);
+            setRegenerating(false);
+            return;
+        }
+
+        setProject({ ...project, share_token: newToken });
+        setShareUrl(`${window.location.origin}/share/${newToken}`);
+        setRegenerating(false);
+        setCopySuccess(false);
+    }
+
+    function copyToClipboard() {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        });
+    }
+
     if (loading) {
         return (
             <main className="flex min-h-screen items-center justify-center text-foreground">
@@ -218,6 +283,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 {/* ── Right Column: Status & Action ─────────────────────── */}
                 <div className="space-y-6">
                     <div className="sticky top-24 space-y-6">
+                        {/* Share Button (Primary Action for Client Comms) */}
+                        <Button
+                            onClick={handleShare}
+                            className="w-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/20 hover:border-cyan-400 hover:text-cyan-300 h-12 text-sm font-medium transition-all group shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]"
+                        >
+                            <Share2 className="mr-2 h-4 w-4 group-hover:text-cyan-300 transition-colors" />
+                            Share with Client
+                        </Button>
                         {/* Status Card */}
                         <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-xl">
                             <h3 className="text-sm font-medium text-muted-foreground mb-4">Revision Usage</h3>
@@ -254,6 +327,111 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                 </p>
                             )}
                         </div>
+
+                        {/* Share Modal */}
+                        <AnimatePresence>
+                            {isShareModalOpen && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        onClick={() => setIsShareModalOpen(false)}
+                                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0A0A0A] p-6 shadow-2xl"
+                                    >
+                                        <div className="mb-6 flex items-start justify-between">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-foreground">Share Project</h3>
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    Share this read-only link with your client.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setIsShareModalOpen(false)}
+                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                            >
+                                                <span className="sr-only">Close</span>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="h-4 w-4"
+                                                >
+                                                    <path d="M18 6 6 18" />
+                                                    <path d="m6 6 12 12" />
+                                                </svg>
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    value={shareUrl}
+                                                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 pr-24 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                                />
+                                                <div className="absolute top-1/2 right-1.5 -translate-y-1/2">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={copyToClipboard}
+                                                        className={`h-8 px-3 transition-all ${copySuccess ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30" : "bg-white/10 text-foreground hover:bg-white/20"}`}
+                                                    >
+                                                        {copySuccess ? (
+                                                            <>
+                                                                <Check className="mr-1.5 h-3.5 w-3.5" />
+                                                                Copied
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="mr-1.5 h-3.5 w-3.5" />
+                                                                Copy
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                                                <div className="flex gap-3">
+                                                    <Lock className="h-5 w-5 flex-shrink-0 text-amber-500" />
+                                                    <div className="space-y-1">
+                                                        <h4 className="text-sm font-medium text-amber-500">Read-only Access</h4>
+                                                        <p className="text-xs text-muted-foreground/80">
+                                                            Clients can view scope, revision history, and usage limits. They cannot edit or add revisions.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={handleRegenerateLink}
+                                                    disabled={regenerating}
+                                                    className="w-full text-xs text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <RefreshCw className={`mr-2 h-3.5 w-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                                                    Regenerate Link (Revoke old link)
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 

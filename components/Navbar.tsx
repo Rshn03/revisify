@@ -84,6 +84,9 @@ export default function Navbar() {
         }, 100);
     };
 
+    // Don't render navbar on share pages
+    if (pathname?.startsWith("/share")) return null;
+
     return (
         <motion.nav
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled

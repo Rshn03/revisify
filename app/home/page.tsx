@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import AnimatedBackground from "@/components/AnimatedBackground";
 
 /* ─── Shared Animations ───────────────────────────────────────────────────── */
@@ -60,6 +63,25 @@ function XIcon() {
 }
 
 export default function LaunchPage() {
+    const router = useRouter();
+    const [proLoading, setProLoading] = useState(false);
+
+    const handleGetPro = async () => {
+        setProLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                router.push("/upgrade");
+            } else {
+                router.push("/login?redirect=/upgrade");
+            }
+        } catch {
+            router.push("/login?redirect=/upgrade");
+        } finally {
+            setProLoading(false);
+        }
+    };
+
     return (
         <main className="relative min-h-screen text-foreground overflow-hidden">
             <AnimatedBackground />
@@ -329,11 +351,13 @@ export default function LaunchPage() {
                                     <CheckIcon /> Scope + Revision Tracking
                                 </li>
                             </ul>
-                            <Link href="/signup" className="w-full">
-                                <Button className="w-full bg-amber-500 text-white hover:bg-amber-600">
-                                    Get Pro
-                                </Button>
-                            </Link>
+                            <Button
+                                onClick={handleGetPro}
+                                disabled={proLoading}
+                                className="w-full bg-amber-500 text-white hover:bg-amber-600"
+                            >
+                                {proLoading ? "Checking…" : "Get Pro"}
+                            </Button>
                         </div>
                     </div>
                     <p className="mt-6 text-sm text-muted-foreground">

@@ -8,6 +8,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface Project {
     id: string;
@@ -53,6 +54,18 @@ export default function DashboardPage() {
 
 
 
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    useEffect(() => {
+        // Check for upgraded=true param
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("upgraded") === "true") {
+            setShowSuccessModal(true);
+            // Clean up URL
+            window.history.replaceState({}, "", "/dashboard");
+        }
+    }, []);
+
     if (loading) {
         return (
             <main className="flex min-h-screen items-center justify-center text-foreground">
@@ -65,6 +78,39 @@ export default function DashboardPage() {
     return (
         <main className="min-h-screen text-foreground px-4 pt-24 pb-12 relative overflow-hidden">
             <AnimatedBackground />
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-zinc-900 border border-green-500/20 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-center"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-transparent pointer-events-none" />
+
+                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/20">
+                            <div className="h-10 w-10 text-green-500">
+                                {/* Sparkles icon or Check icon */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                            </div>
+                        </div>
+
+                        <h2 className="text-2xl font-bold text-white mb-2">Pro Unlocked!</h2>
+                        <p className="text-muted-foreground mb-8">
+                            Welcome to the Pro plan. You can now create unlimited projects.
+                        </p>
+
+                        <Button
+                            onClick={() => setShowSuccessModal(false)}
+                            size="lg"
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25 border-0"
+                        >
+                            Let's Build
+                        </Button>
+                    </motion.div>
+                </div>
+            )}
 
             <div className="mx-auto max-w-5xl relative z-10">
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
@@ -88,11 +134,13 @@ export default function DashboardPage() {
                         </h2>
                         {projects.length > 0 && (
                             <Button
-                                onClick={() => router.push("/projects/new")}
+                                asChild
                                 className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 hover:scale-[1.02]"
                             >
-                                <Plus className="mr-2 h-4 w-4" />
-                                New Project
+                                <Link href="/projects/new">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    New Project
+                                </Link>
                             </Button>
                         )}
                     </div>
@@ -104,7 +152,7 @@ export default function DashboardPage() {
                             transition={{ duration: 0.5 }}
                             className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-16 text-center backdrop-blur-sm relative group overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 group-hover:scale-110 transition-transform duration-500">
                                 <Plus className="h-10 w-10 text-amber-500" />
@@ -112,16 +160,18 @@ export default function DashboardPage() {
 
                             <h3 className="text-xl font-semibold text-foreground">No projects created yet</h3>
                             <p className="mt-3 text-muted-foreground max-w-md mx-auto leading-relaxed">
-                                Start by creating your first project to track scope, manage revisions, and share with clients.
+                                Start by creating your first project to track scope, manage revisions, and keep clients happy.
                             </p>
 
                             <Button
-                                onClick={() => router.push("/projects/new")}
+                                asChild
                                 size="lg"
-                                className="mt-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all hover:scale-105"
+                                className="relative z-20 mt-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all hover:scale-105 cursor-pointer"
                             >
-                                <Plus className="mr-2 h-4 w-4" />
-                                Create First Project
+                                <Link href="/projects/new">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Create First Project
+                                </Link>
                             </Button>
                         </motion.div>
                     ) : (

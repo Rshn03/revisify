@@ -19,13 +19,8 @@ export function middleware(request: NextRequest) {
         return NextResponse.next()
     }
 
-    // Redirect everything else to the landing page
-    // In development, allow access to all routes
-    if (process.env.NODE_ENV === 'development') {
-        return NextResponse.next()
-    }
-    // In production, redirect everything else to the landing page
-    return NextResponse.redirect(new URL('/', request.url))
+    // Allow all other requests
+    return NextResponse.next()
 }
 
 export const config = {
